@@ -4,7 +4,7 @@
 ### 安装Python环境
 > Python
 >
-> https://www.anaconda.com/
+> 推荐您使用[anaconda](https://www.anaconda.com)
 
 #### 安装程序
 > python setup.py install
