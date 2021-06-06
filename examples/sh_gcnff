@@ -1,0 +1,20 @@
+#!/bin/bash
+
+gcnff get_graph input.json
+gcnff divide_set input.json
+gcnff init_train input.json
+gcnff final_train input.json
+gcnff model_test input.json
+gcnff get_potential input.json
+
+gcnff showfig Epoches-Errors-init.txt
+mv Epoches-Errors.png Epoches-Errors-init.png
+gcnff showfig Epoches-Errors-finetune.txt
+mv Epoches-Errors.png Epoches-Errors-finetune.png
+
+gcnff showfig pred-ture_energy.txt
+mv Pred-True.png pred-ture_energy.png
+gcnff showfig pred-ture_force.txt
+mv Pred-True.png pred-ture_force.png
+gcnff showfig pred-ture_virial.txt
+mv  Pred-True.png pred-ture_virial.png

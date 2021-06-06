@@ -1,0 +1,54 @@
+{
+  "get_graph": {
+    "CUTOFF_DISTANCE1": 7.0,
+    "CUTOFF_DISTANCE2": 5.0,
+    "file_path": "./test",
+	"jumpNum": 8,
+	"baseEvalue": 0.0
+  },
+  
+  "divide_set": {
+    "RandomSeed": 0,
+	"graphfile_path": "./graphdata",
+	"initmodel_data": 0.25,
+    "initmodel_traindata": 0.75,
+	"finalmodel_traindata": 0.7,
+    "finalmodel_validata": 0.2
+  },
+
+  "training": {
+    "RHO1": 0.02,
+	"RHO2": 0.01,
+    "GAMMA": 0.1,
+    "RBF_KERNEL_NUM": 128,
+    "HID_DIM": 32,
+    "NUM_CONV": 4,
+    "LEARNING_RATE_INIT": 0.0002,
+    "ATOM_TYPES": 1,
+	"EXPONENT": 6,
+    "file_path": "./model_graphdata",
+	"pin_memory": "False",
+	"batch_num": 1,
+	"LRStep": 5,
+	"LRGamma": 0.8,
+	"CNT": 10,
+	"batch_step": 1000,
+	"max_epoch": 10000,
+    "use_device": "cuda:0"
+  },
+
+  "final_model": {
+    "begin_model": "./best_model_init.pkl"
+  },
+
+  "model_test": {
+    "use_device": "cuda:0",
+    "testdata": "./model_graphdata/test_graphs.pickle",
+	"testmodel": "./best_model_finetune.pkl"
+  },
+  
+   "get_potential": {
+    "out_model": "./best_model_finetune.pkl",
+	"element_list": "S"
+  }
+}
