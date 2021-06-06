@@ -1,5 +1,5 @@
 ### 简介
-> GCNFF 是一个基于图卷积方法构造的分子动力学软件,请访问gcnff.com获取更多信息！
+> GCNFF 是一个基于图卷积方法构造的分子动力学软件,请访问[gcnff.com](http://gcnff.com)获取更多信息！
 
 ### 安装Python环境
 > Python
