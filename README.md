@@ -1,5 +1,6 @@
 ### 简介
 > GCNFF 是一个基于图卷积方法构造的分子动力学软件,请访问[gcnff.com](http://gcnff.com)获取更多信息！
+> GCNFF is a molecular dynamics (MD) force field based on the graph convolutional network (GCN) method, which realizes the transfer of high-precision first-principles methods to molecular dynamics by the LAMMPS.
 
 ### 安装Python环境
 > Python
