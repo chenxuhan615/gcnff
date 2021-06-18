@@ -1,7 +1,7 @@
 import sys
 
 class Logger(object):
-    def __init__(self, filename="gcnff.log"):
+    def __init__(self, filename="log.gcnff"):
         self.terminal = sys.stdout
         self.log = open(filename, "a")
 

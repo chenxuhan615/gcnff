@@ -11,6 +11,7 @@ from gcnff.graph import getatom_num,generate_graphs1,generate_graphs2
 from gcnff.model import Schnet_init, global_mean_pool, Schnet
 from gcnff.printsave import Logger
 from gcnff.showplot import showfig
+from gcnff.helpinfo import showhelp
 
 def load_file(config):
     f = open(config)
@@ -287,7 +288,12 @@ def init_train(config_file):
             ' validation error = ',valid_error/init_valid_size,
             ' training and validation time = ',time_end_epoch-time_beg_epoch,
             ' learning rate = ',optimizer_init.param_groups[0]["lr"])
-    
+
+        with open('Epoches-Errors-init.txt', 'w') as f:
+            f.write('Epoches\t\tTraining_Error\t\tValidation_Error\n')
+            for index in range(len(train_errors_init)):
+                f.write("%d\t\t%lf\t\t%lf\n" % (index, train_errors_init[index], valid_errors_init[index]))
+
         if valid_error<min_valid_error: #judgement for early stopping
             cnt=0
             torch.save(model_init,'best_model_init.pkl')
@@ -301,10 +307,6 @@ def init_train(config_file):
                 #    pickle.dump(train_errors_init,f)
                 #with open('valid_errors_init.pickle','wb') as f:
                 #    pickle.dump(valid_errors_init,f)
-                with open('Epoches-Errors-init.txt', 'w') as f:
-                    f.write('Epoches\t\tTraining_Error\t\tValidation_Error\n')
-                    for index in range(len(train_errors_init)):
-                        f.write("%d\t\t%lf\t\t%lf\n" % (index, train_errors_init[index], valid_errors_init[index]))
                 break
     print("\n\t------------------------------------------------\n")
 
@@ -507,7 +509,12 @@ def final_train(config_file):
             ' validation error = ',valid_error/valid_size,
             ' training and validation time = ',time_end_epoch-time_beg_epoch,
             ' learning rate = ',optimizer_finetune.param_groups[0]["lr"])
-    
+
+        with open('Epoches-Errors-finetune.txt', 'w') as f:
+            f.write('Epoches\t\tTraining_Error\t\tValidation_Error\n')
+            for index in range(len(train_errors_finetune)):
+                f.write("%d\t\t%lf\t\t%lf\n" % (index, train_errors_finetune[index], valid_errors_finetune[index]))
+
         if valid_error<min_valid_error: #judgement for early stopping
             cnt=0
             torch.save(model_finetune,'best_model_finetune.pkl')
@@ -517,10 +524,6 @@ def final_train(config_file):
             if cnt>=CNT:
                 print('Early stopping')
                 del(model_finetune)
-                with open('Epoches-Errors-finetune.txt', 'w') as f:
-                    f.write('Epoches\t\tTraining_Error\t\tValidation_Error\n')
-                    for index in range(len(train_errors_finetune)):
-                        f.write("%d\t\t%lf\t\t%lf\n" % (index, train_errors_finetune[index], valid_errors_finetune[index]))
                 #with open('training_errors_finetune.pickle','wb') as f:
                 #    pickle.dump(train_errors_finetune,f)
                 #with open('valid_errors_finetune.pickle','wb') as f:
@@ -602,12 +605,15 @@ def model_test(config_file):
     
     true_energies=np.concatenate(true_energies,axis=0)
     true_forces=np.concatenate(true_forces,axis=0)
-    print('\tMAE of Energy in test data: ',np.mean(np.fabs(pred_energies-true_energies)))
-    print('\tMAE of Force in test data: ',(1/3)*(np.mean(np.linalg.norm(pred_forces-true_forces,ord=1,axis=1))))
+    print('\tMAE of Energy in test data: ',1000*np.mean(np.fabs(pred_energies-true_energies)),' meV/atom ')
+    print('\tRMSE of Energy in test data: ',1000*np.sqrt(np.mean(np.square(pred_energies-true_energies))),' meV/atom\n')
+    print('\tMAE of Force in test data: ',(1/3)*(np.mean(np.linalg.norm(pred_forces-true_forces,ord=1,axis=1))),' eV/Å ')
+    print('\tRMSE of Force in test data: ',np.sqrt((1/3)*(np.mean(np.linalg.norm(pred_forces-true_forces,ord=2,axis=1)**2))),'eV/Å\n')
     try:
         pred_virials=np.concatenate(pred_virials,axis=0)
         true_virials=np.concatenate(true_virials,axis=0)
-        print('\tMAE of Virial in test data: ',(1/6)*np.mean(np.linalg.norm(pred_virials-true_virials,ord=1,axis=1)))
+        print('\tMAE of Virial in test data: ',(1/6)*np.mean(np.linalg.norm(pred_virials-true_virials,ord=1,axis=1)),' eV ')
+        print('\tRMSE of Virial in test data: ',np.sqrt((1/6)*np.mean(np.linalg.norm(pred_virials-true_virials,ord=2,axis=1)**2)),'eV \n')
         virial=np.concatenate((pred_virials.reshape((-1,1)),true_virials.reshape((-1,1))),axis=1)
         np.savetxt("./pred-ture_virial.txt",virial,fmt='%lf',delimiter=' ')
     except:
@@ -670,87 +676,14 @@ def get_potential(config_file):
 
 def main():
     if len(sys.argv) < 2:
-        print("\n\t ================================================")
-        print('\t|      GCNFF is a molecular dynamics force       |')
-        print('\t|  field based on Graph Convolutional Networks.  |')
-        print("\t ================================================")
-        print('\t|            The general use form is :           |')
-        print('\t|                                                |')
-        print('\t|      gcnff [action commond] [input.json]       |')
-        print('\t|                                                |')
-        print("\t --------------[action commond]------------------")
-        print('\t|                                                |')
-        print('\t|                1. get_graph                    |')
-        print('\t|                2. divide_set                   |')
-        print('\t|                3. init_train                   |')
-        print('\t|                4. final_train                  |')
-        print('\t|                5. model_test                   |')
-        print('\t|                6. get_potential                |')
-        print('\t|                                                |')
-        print("\t --------------[Accessibility]-------------------")
-        print('\t|                                                |')
-        print('\t|             Draw the output file               |')
-        print('\t|                For example :                   |')
-        print('\t|                                                |')
-        print('\t|      gcnff showfig pred-ture_energy.txt        |')
-        print('\t|                                                |')
-        print("\t ================================================")
+        showhelp()
         exit(-1)
     action = sys.argv[1]
-    if action == '-help':
-        print("\n\t ================================================")
-        print('\t|      GCNFF is a molecular dynamics force       |')
-        print('\t|  field based on Graph Convolutional Networks.  |')
-        print("\t ================================================")
-        print('\t|            The general use form is :           |')
-        print('\t|                                                |')
-        print('\t|      gcnff [action commond] [input.json]       |')
-        print('\t|                                                |')
-        print("\t --------------[action commond]------------------")
-        print('\t|                                                |')
-        print('\t|                1. get_graph                    |')
-        print('\t|                2. divide_set                   |')
-        print('\t|                3. init_train                   |')
-        print('\t|                4. final_train                  |')
-        print('\t|                5. model_test                   |')
-        print('\t|                6. get_potential                |')
-        print('\t|                                                |')
-        print("\t --------------[Accessibility]-------------------")
-        print('\t|                                                |')
-        print('\t|             Draw the output file               |')
-        print('\t|                For example :                   |')
-        print('\t|                                                |')
-        print('\t|      gcnff showfig pred-ture_energy.txt        |')
-        print('\t|                                                |')
-        print("\t ================================================")
+    if action == '-help' or action == '-h':
+        showhelp()
         exit(0)
-
     if action not in ['get_graph', 'divide_set', 'init_train', 'final_train', 'model_test', 'get_potential','showfig','-help']:
-        print("\n\t ================================================")
-        print('\t|      GCNFF is a molecular dynamics force       |')
-        print('\t|  field based on Graph Convolutional Networks.  |')
-        print("\t ================================================")
-        print('\t|            The general use form is :           |')
-        print('\t|                                                |')
-        print('\t|      gcnff [action commond] [input.json]       |')
-        print('\t|                                                |')
-        print("\t --------------[action commond]------------------")
-        print('\t|                                                |')
-        print('\t|                1. get_graph                    |')
-        print('\t|                2. divide_set                   |')
-        print('\t|                3. init_train                   |')
-        print('\t|                4. final_train                  |')
-        print('\t|                5. model_test                   |')
-        print('\t|                6. get_potential                |')
-        print('\t|                                                |')
-        print("\t --------------[Accessibility]-------------------")
-        print('\t|                                                |')
-        print('\t|             Draw the output file               |')
-        print('\t|                For example :                   |')
-        print('\t|                                                |')
-        print('\t|      gcnff showfig pred-ture_energy.txt        |')
-        print('\t|                                                |')
-        print("\t ================================================")
+        showhelp()
         exit(-1)
     sys.stdout=Logger('gcnff.log')
     config_file = sys.argv[2]
