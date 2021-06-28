@@ -227,7 +227,7 @@ def init_train(config_file):
         print("\tYou did not set the value of ->['training']['pin_memory']<-, and it has been set to 'False' by default!\n")
     try:
         batch_num = config['training']['batch_num']
-        if(batch_num!=1)
+        if(batch_num!=1):
             print("\tGCNFF only supports the setting of ['training']['batch_num'] to 1 currently\n")
             exit(1)
     except:
@@ -561,7 +561,7 @@ def final_train(config_file):
         print("\tYou did not set the value of ->['training']['pin_memory']<-, and it has been set to 'False' by default!\n")
     try:
         batch_num = config['training']['batch_num']
-        if(batch_num!=1)
+        if(batch_num!=1):
             print("\tGCNFF only supports the setting of ['training']['batch_num'] to 1 currently\n")
         batch_num=1
     except:
@@ -860,7 +860,7 @@ def model_test(config_file):
         print("\tYou did not set the value of ->['training']['pin_memory']<-, and it has been set to 'False' by default!\n")
     try:
         batch_num = config['training']['batch_num']
-        if(batch_num!=1)
+        if(batch_num!=1):
             print("\tGCNFF only supports the setting of ['training']['batch_num'] to 1 currently\n")
         batch_num=1
     except:
