@@ -269,7 +269,7 @@ def init_train(config_file):
         Flag_AutomaticWeightedLoss ="False"
         print("\tYou did not set the value of ->['training']['Flag_AutoLoss']<-, and it has been set to 'False' by default!\n")
     
-    if Flag_AutomaticWeightedLoss:
+    if (Flag_AutomaticWeightedLoss=="True"):
         awl = AutomaticWeightedLoss(3)
         awl.to(use_device)
         print("\tUsing the AutomaticWeightedLoss method! ->https://github.com/Mikoto10032/AutomaticWeightedLoss<-\n")
@@ -607,7 +607,7 @@ def final_train(config_file):
     except:
         print("\tYou did not set the value of ->['final_model']['begin_model']<- !\n")
         
-    if Flag_AutomaticWeightedLoss:
+    if (Flag_AutomaticWeightedLoss=="True"):
         awl = AutomaticWeightedLoss(3)
         try:
             awl_init=torch.load("./AutomaticWeightedLoss.pkl",map_location='cpu')
