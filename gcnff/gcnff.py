@@ -8,10 +8,11 @@ import datetime
 import numpy as np
 from torch_geometric.data import DataLoader
 from gcnff.graph import getatom_num,generate_graphs1,generate_graphs2
-from gcnff.model import Schnet_init, global_mean_pool, Schnet
+from gcnff.model import GCNFF_init, global_mean_pool, GCNFF
 from gcnff.printsave import Logger
 from gcnff.showplot import showfig
 from gcnff.helpinfo import showhelp
+from gcnff.AutomaticWeightedLoss import AutomaticWeightedLoss
 
 def load_file(config):
     f = open(config)
@@ -19,14 +20,35 @@ def load_file(config):
 
 def get_graph(config_file):
     config = load_file(config_file)
-    CUTOFF_DISTANCE1 = config['get_graph']['CUTOFF_DISTANCE1']
-    CUTOFF_DISTANCE2 = config['get_graph']['CUTOFF_DISTANCE2']
-    file_path = config['get_graph']['file_path']
-    jumpNum = config['get_graph']['jumpNum']
-    baseEvalue = config['get_graph']['baseEvalue']
     
     print("\n\t------------------Step--One---------------------\n")
     print("\tCreating a folder 'graphdata' in the current directory \n\t\tto store the graph format of each input file.\n")
+    try:
+        CUTOFF_DISTANCE1 = config['get_graph']['CUTOFF_DISTANCE1']
+    except:
+        CUTOFF_DISTANCE1 = 6.5
+        print("\tYou did not set the value of ->['get_graph']['CUTOFF_DISTANCE1']<-, and it has been set to 6.5 by default!\n")
+    try:
+        CUTOFF_DISTANCE2 = config['get_graph']['CUTOFF_DISTANCE2']
+    except:
+        CUTOFF_DISTANCE2 = 5.0
+        print("\tYou did not set the value of ->['get_graph']['CUTOFF_DISTANCE2']<-, and it has been set to 5.0 by default!\n")
+    try:
+        file_path = config['get_graph']['file_path']
+    except:
+        print("\tInput file directory ->['get_graph']['file_path']<- must be specified by yourself!\n")
+        exit(1)
+    try:
+        jumpNum = config['get_graph']['jumpNum']
+    except:
+        jumpNum = 1
+        print("\tYou did not set the value of ->['get_graph']['jumpNum']<-, and it has been set to 1 by default!\n")
+    try:
+        baseEvalue = config['get_graph']['baseEvalue']
+    except:
+        baseEvalue = 0.0
+        print("\tYou did not set the value of ->['get_graph']['baseEvalue']<-, and it has been set to 0.0 by default!\n")
+
     graph_path="./graphdata"
     isExists=os.path.exists(graph_path)
     if not isExists:
@@ -53,15 +75,40 @@ def get_graph(config_file):
 def divide_set(config_file):
     config = load_file(config_file)
     
-    randomSeed=config['divide_set']['RandomSeed']
-    file_path = config['divide_set']['graphfile_path']
-    date_for_initmodel=config['divide_set']['initmodel_data']
-    traindate_for_initmodel=config['divide_set']['initmodel_traindata']
-    traindate_for_finalmodel=config['divide_set']['finalmodel_traindata']
-    validate_for_finalmodel=config['divide_set']['finalmodel_validata']
-    
     print("\n\t------------------Step--Two---------------------\n")
     print("\tCreating a folder 'model_graphdata' in the current directory \n\t\tto store the divided data set.\n")
+    
+    try:
+        randomSeed=config['divide_set']['RandomSeed']
+    except:
+        randomSeed=0
+        print("\tYou did not set the value of ->['divide_set']['RandomSeed']<-, and it has been set to 0 by default!\n")
+    try:
+        file_path = config['divide_set']['graphfile_path']
+    except:
+        file_path = "./graphdata"
+        print("\tYou did not set the value of ->['divide_set']['graphfile_path']<-, and it has been set to './graphdata/' by default!\n")
+    try:
+        date_for_initmodel=config['divide_set']['initmodel_data']
+    except:
+        date_for_initmodel=0.25
+        print("\tYou did not set the value of ->['divide_set']['initmodel_data']<-, and it has been set to 0.25 by default!\n")
+    try:
+        traindate_for_initmodel=config['divide_set']['initmodel_traindata']
+    except:
+        traindate_for_initmodel=0.75
+        print("\tYou did not set the value of ->['divide_set']['initmodel_traindata']<-, and it has been set to 0.75 by default!\n")
+    try:
+        traindate_for_finalmodel=config['divide_set']['finalmodel_traindata']
+    except:
+        traindate_for_finalmodel=0.7
+        print("\tYou did not set the value of ->['divide_set']['finalmodel_traindata']<-, and it has been set to 0.7 by default!\n")
+    try:
+        validate_for_finalmodel=config['divide_set']['finalmodel_validata']
+    except:
+        validate_for_finalmodel=0.2
+        print("\tYou did not set the value of ->['divide_set']['finalmodel_validata']<-, and it has been set to 0.2 by default!\n")
+
     modelgraph_path="./model_graphdata"
     isExists=os.path.exists(modelgraph_path)
     if not isExists:
@@ -74,7 +121,7 @@ def divide_set(config_file):
     for file in file_names:
         #print(file,"\tread end")
         graph_list+=pickle.load(open(file_path+'/'+file,'rb'))
-    print("\tThe total number of graph structures read is:",len(graph_list))
+    print("\tThe total number of graph structures read is:",len(graph_list),".\n")
     
     random.seed(randomSeed)
     random.shuffle(graph_list)
@@ -106,31 +153,126 @@ def divide_set(config_file):
     
 def init_train(config_file):
     config = load_file(config_file)
-    
-    RHO1 = config['training']['RHO1']
-    RHO2 = config['training']['RHO2']
-    GAMMA = config['training']['GAMMA']
-    RBF_KERNEL_NUM = config['training']['RBF_KERNEL_NUM']
-    HID_DIM = config['training']['HID_DIM']
-    NUM_CONV = config['training']['NUM_CONV']
-    LEARNING_RATE_INIT = config['training']['LEARNING_RATE_INIT']
-    ATOM_TYPES = config['training']['ATOM_TYPES']
-    CUTOFF_DISTANCE1 = config['get_graph']['CUTOFF_DISTANCE1']
-    CUTOFF_DISTANCE2 = config['get_graph']['CUTOFF_DISTANCE2']
-    EXPONENT = config['training']['EXPONENT']
-    file_path = config['training']['file_path']
-    use_device = config['training']['use_device']
-    is_pin_memory = config['training']['pin_memory']
-    batch_num = config['training']['batch_num']
-    LRStep = config['training']['LRStep']
-    LRGamma = config['training']['LRGamma']
-    CNT = config['training']['CNT']
-    batch_step = config['training']['batch_step']
-    max_epoch = config['training']['max_epoch']
-    
     print("\n\t------------------Step--Three---------------------\n")
     print("\tTraining an 'initial model' with fixed parameters in Conv layers.\n")
+    try:
+        RHO1 = config['training']['RHO1']
+    except:
+        RHO1 = 0.01
+        print("\tYou did not set the value of ->['training']['RHO1']<-, and it has been set to 0.01 by default!\n")
+    try:
+        RHO2 = config['training']['RHO2']
+    except:
+        RHO2 = 0.001
+        print("\tYou did not set the value of ->['training']['RHO2']<-, and it has been set to 0.001 by default!\n")
+    try:
+        GAMMA = config['training']['GAMMA']
+    except:
+        GAMMA = 0.1
+        print("\tYou did not set the value of ->['training']['GAMMA']<-, and it has been set to 0.1 by default!\n")
+    try:
+        RBF_KERNEL_NUM = config['training']['RBF_KERNEL_NUM']
+    except:
+        RBF_KERNEL_NUM = 128
+        print("\tYou did not set the value of ->['training']['RBF_KERNEL_NUM']<-, and it has been set to 128 by default!\n")
+    try:
+        HID_DIM = config['training']['HID_DIM']
+    except:
+        HID_DIM = 32
+        print("\tYou did not set the value of ->['training']['HID_DIM']<-, and it has been set to 32 by default!\n")
+    try:
+        NUM_CONV = config['training']['NUM_CONV']
+    except:
+        NUM_CONV = 3
+        print("\tYou did not set the value of ->['training']['NUM_CONV']<-, and it has been set to 3 by default!\n")
+    try:
+        LEARNING_RATE_INIT = config['training']['LEARNING_RATE_INIT']
+    except:
+        LEARNING_RATE_INIT = 0.0002
+        print("\tYou did not set the value of ->['training']['LEARNING_RATE_INIT']<-, and it has been set to 0.0002 by default!\n")
+    try:
+        ATOM_TYPES = config['training']['ATOM_TYPES']
+    except:
+        print("\tTotal atom types ->['training']['ATOM_TYPES']<- must be specified by yourself!\n")
+        exit(1)
+    try:
+        CUTOFF_DISTANCE1 = config['get_graph']['CUTOFF_DISTANCE1']
+    except:
+        CUTOFF_DISTANCE1 = 6.5
+        print("\tYou did not set the value of ->['get_graph']['CUTOFF_DISTANCE1']<-, and it has been set to 6.5 by default!\n")
+    try:
+        CUTOFF_DISTANCE2 = config['get_graph']['CUTOFF_DISTANCE2']
+    except:
+        CUTOFF_DISTANCE2 = 5.0
+        print("\tYou did not set the value of ->['get_graph']['CUTOFF_DISTANCE2']<-, and it has been set to 5.0 by default!\n")
+    try:
+        EXPONENT = config['training']['EXPONENT']
+    except:
+        EXPONENT = 6.0
+        print("\tYou did not set the value of ->['training']['EXPONENT']<-, and it has been set to 6.0 by default!\n")
+    try:
+        file_path = config['training']['file_path']
+    except:
+        file_path = "./model_graphdata"
+        print("\tYou did not set the value of ->['training']['file_path']<-, and it has been set to './model_graphdata' by default!\n")
+    try:
+        use_device = config['training']['use_device']
+    except:
+        use_device= 'cuda:0' if torch.cuda.is_available() else 'cpu' 
+        print("\tYou did not set the value of ->['training']['use_device']<-, and it has been set to ",use_device," by default!\n")
+    try:
+        is_pin_memory = config['training']['pin_memory']
+    except:
+        is_pin_memory="False"
+        print("\tYou did not set the value of ->['training']['pin_memory']<-, and it has been set to 'False' by default!\n")
+    try:
+        batch_num = config['training']['batch_num']
+        if(batch_num!=1)
+            print("\tGCNFF only supports the setting of ['training']['batch_num'] to 1 currently\n")
+            exit(1)
+    except:
+        batch_num=1
+        print("\t->['training']['batch_num']<- has been set to 1 by default!\n")
+    try:
+        LRStep = config['training']['LRStep']
+    except:
+        LRStep =5
+        print("\tYou did not set the value of ->['training']['LRStep']<-, and it has been set to 5 by default!\n")
+    try:
+        LRGamma = config['training']['LRGamma']
+    except:
+        LRGamma =0.8
+        print("\tYou did not set the value of ->['training']['LRGamma']<-, and it has been set to 0.8 by default!\n")
+    try:
+        CNT = config['training']['CNT']
+    except:
+        CNT = 10
+        print("\tYou did not set the value of ->['training']['CNT']<-, and it has been set to 10 by default!\n")
+    try:
+        batch_step = config['training']['batch_step']
+    except:
+        batch_step = 1000
+        print("\tYou did not set the value of ->['training']['batch_step']<-, and it has been set to 1000 by default!\n")
+    try:
+        max_epoch = config['training']['max_epoch']
+    except:
+        max_epoch = 300
+        print("\tYou did not set the value of ->['training']['max_epoch']<-, and it has been set to 300 by default!\n")
+    try:
+        Data_shuffle = config['training']['Data_shuffle']
+    except:
+        Data_shuffle ="False"
+        print("\tYou did not set the value of ->['training']['Data_shuffle']<-, and it has been set to 'False' by default!\n")
+    try:
+        Flag_AutomaticWeightedLoss = config['training']['Flag_AutoLoss']
+    except:
+        Flag_AutomaticWeightedLoss ="False"
+        print("\tYou did not set the value of ->['training']['Flag_AutoLoss']<-, and it has been set to 'False' by default!\n")
     
+    if Flag_AutomaticWeightedLoss:
+        awl = AutomaticWeightedLoss(3)
+        awl.to(use_device)
+        print("\tUsing the AutomaticWeightedLoss method! ->https://github.com/Mikoto10032/AutomaticWeightedLoss<-\n")
     init_training_graph = pickle.load(open(file_path+'/'+'init_training_graphs.pickle', 'rb'))
     init_validation_graph = pickle.load(open(file_path+'/'+'init_validation_graphs.pickle', 'rb'))
 
@@ -139,13 +281,16 @@ def init_train(config_file):
     print("\tthe init model has training data:\t",init_train_size)
     print("\tthe init model has validation data:\t",init_valid_size)
     print("\n\n\t\tstarting to training : \n\n")
-    init_train_dataloader = DataLoader(init_training_graph, batch_size=batch_num, pin_memory=is_pin_memory)
-    init_valid_dataloader = DataLoader(init_validation_graph, batch_size=batch_num, pin_memory=is_pin_memory)
-    model_init=Schnet_init(cutoff1=CUTOFF_DISTANCE1,cutoff2=CUTOFF_DISTANCE2,gamma=GAMMA,rbfkernel_number=RBF_KERNEL_NUM,
+    init_train_dataloader = DataLoader(init_training_graph, batch_size=batch_num, pin_memory=is_pin_memory,shuffle=Data_shuffle)
+    init_valid_dataloader = DataLoader(init_validation_graph, batch_size=batch_num, pin_memory=is_pin_memory,shuffle=Data_shuffle)
+    model_init=GCNFF_init(cutoff1=CUTOFF_DISTANCE1,cutoff2=CUTOFF_DISTANCE2,gamma=GAMMA,rbfkernel_number=RBF_KERNEL_NUM,
                             hidden_layer_dimensions=HID_DIM,num_conv=NUM_CONV,atom_types=ATOM_TYPES,exponent=EXPONENT)
 
     model_init.to(use_device)
-    optimizer_init = torch.optim.Adam(model_init.parameters(), lr=LEARNING_RATE_INIT)
+    try:
+        optimizer_init = torch.optim.Adam([{'params':model_init.parameters()},{'params':awl.parameters(),'weight_decay':0}], lr=LEARNING_RATE_INIT)
+    except:
+        optimizer_init = torch.optim.Adam(model_init.parameters(), lr=LEARNING_RATE_INIT)
     scheduler_init = torch.optim.lr_scheduler.StepLR(optimizer_init, step_size=LRStep, gamma=LRGamma)
 
     min_valid_error=np.inf
@@ -155,6 +300,10 @@ def init_train(config_file):
     for i in range(max_epoch):
         time_beg_epoch=datetime.datetime.now()
         #training process
+        try:
+            awl.train()
+        except:
+            pass
         model_init.train()
         train_error=0
         batch_num=0
@@ -198,7 +347,10 @@ def init_train(config_file):
                     loss_force=torch.mul(loss_force,loss_force)
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,train_graph.y,reduction='none')
                     loss_force_avg=global_mean_pool(loss_force,train_graph.batch)
-                    total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
+                    try:
+                        total_loss=awl(loss_energy,loss_force_avg,loss_virial)
+                    except:
+                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
                     total_loss.backward(torch.ones_like(total_loss))
                     optimizer_init.step()
                     train_error+=torch.sum(total_loss).cpu().detach().numpy()
@@ -212,7 +364,10 @@ def init_train(config_file):
                     loss_force=torch.mul(loss_force,loss_force)
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,train_graph.y,reduction='none')
                     loss_force_avg=global_mean_pool(loss_force,train_graph.batch)
-                    total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
+                    try:
+                        total_loss=awl(loss_energy,loss_force_avg)
+                    except:
+                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
                     total_loss.backward(torch.ones_like(total_loss))
                     optimizer_init.step()
                     train_error+=torch.sum(total_loss).cpu().detach().numpy()
@@ -226,6 +381,10 @@ def init_train(config_file):
         train_errors_init.append(train_error/init_train_size)
     
         #validation process
+        try:
+            awl.eval()
+        except:
+            pass
         model_init.eval()
         optimizer_init.zero_grad()
         torch.cuda.empty_cache()
@@ -267,14 +426,20 @@ def init_train(config_file):
                     loss_force=torch.mul(loss_force,loss_force)
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,valid_graph.y,reduction='none')
                     loss_force_avg=global_mean_pool(loss_force,valid_graph.batch)
-                    total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
+                    try:
+                        total_loss=awl(loss_energy,loss_force_avg,loss_virial)
+                    except:
+                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
                     valid_error+=torch.sum(total_loss).cpu().detach().numpy()
                 except:
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,valid_graph.y,reduction='none')
                     loss_force=torch.norm(valid_graph.force-pred_force,p=2,dim=1,keepdim=True)
                     loss_force=torch.mul(loss_force,loss_force)
                     loss_force_avg=global_mean_pool(loss_force,valid_graph.batch)
-                    total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
+                    try:
+                        total_loss=awl(loss_energy,loss_force_avg)
+                    except:
+                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
                     valid_error+=torch.sum(total_loss).cpu().detach().numpy()
             except:
                 torch.cuda.empty_cache()
@@ -296,12 +461,20 @@ def init_train(config_file):
 
         if valid_error<min_valid_error: #judgement for early stopping
             cnt=0
+            try:
+                torch.save(awl,'AutomaticWeightedLoss_init.pkl')
+            except:
+                pass
             torch.save(model_init,'best_model_init.pkl')
             min_valid_error=valid_error
         else:
             cnt+=1
             if cnt>=CNT:
                 print('Early stopping')
+                try:
+                    del(awl)
+                except:
+                    pass
                 del(model_init)
                 #with open('training_errors_init.pickle','wb') as f:
                 #    pickle.dump(train_errors_init,f)
@@ -314,48 +487,161 @@ def init_train(config_file):
 def final_train(config_file):
     config = load_file(config_file)
     
-    RHO1 = config['training']['RHO1']
-    RHO2 = config['training']['RHO2']
-    GAMMA = config['training']['GAMMA']
-    RBF_KERNEL_NUM = config['training']['RBF_KERNEL_NUM']
-    HID_DIM = config['training']['HID_DIM']
-    NUM_CONV = config['training']['NUM_CONV']
-    LEARNING_RATE_INIT = config['training']['LEARNING_RATE_INIT']
-    ATOM_TYPES = config['training']['ATOM_TYPES']
-    CUTOFF_DISTANCE1 = config['get_graph']['CUTOFF_DISTANCE1']
-    CUTOFF_DISTANCE2 = config['get_graph']['CUTOFF_DISTANCE2']
-    EXPONENT = config['training']['EXPONENT']
-    file_path = config['training']['file_path']
-    use_device = config['training']['use_device']
-    is_pin_memory = config['training']['pin_memory']
-    batch_num = config['training']['batch_num']
-    LRStep = config['training']['LRStep']
-    LRGamma = config['training']['LRGamma']
-    CNT = config['training']['CNT']
-    batch_step = config['training']['batch_step']
-    init_model=config['final_model']['begin_model']
-    max_epoch = config['training']['max_epoch']
-    
     print("\n\t------------------Step--Four---------------------\n")
     print("\tRetraining an 'final model' with unfixed parameters in Conv layers.\n")
-
-    model_finetune=Schnet(cutoff1=CUTOFF_DISTANCE1,cutoff2=CUTOFF_DISTANCE2,gamma=GAMMA,rbfkernel_number=RBF_KERNEL_NUM,
+    try:
+        RHO1 = config['training']['RHO1']
+    except:
+        RHO1 = 0.01
+        print("\tYou did not set the value of ->['training']['RHO1']<-, and it has been set to 0.01 by default!\n")
+    try:
+        RHO2 = config['training']['RHO2']
+    except:
+        RHO2 = 0.001
+        print("\tYou did not set the value of ->['training']['RHO2']<-, and it has been set to 0.001 by default!\n")
+    try:
+        GAMMA = config['training']['GAMMA']
+    except:
+        GAMMA = 0.1
+        print("\tYou did not set the value of ->['training']['GAMMA']<-, and it has been set to 0.1 by default!\n")
+    try:
+        RBF_KERNEL_NUM = config['training']['RBF_KERNEL_NUM']
+    except:
+        RBF_KERNEL_NUM = 128
+        print("\tYou did not set the value of ->['training']['RBF_KERNEL_NUM']<-, and it has been set to 128 by default!\n")
+    try:
+        HID_DIM = config['training']['HID_DIM']
+    except:
+        HID_DIM = 32
+        print("\tYou did not set the value of ->['training']['HID_DIM']<-, and it has been set to 32 by default!\n")
+    try:
+        NUM_CONV = config['training']['NUM_CONV']
+    except:
+        NUM_CONV = 3
+        print("\tYou did not set the value of ->['training']['NUM_CONV']<-, and it has been set to 3 by default!\n")
+    try:
+        LEARNING_RATE_INIT = config['training']['LEARNING_RATE_INIT']
+    except:
+        LEARNING_RATE_INIT = 0.0002
+        print("\tYou did not set the value of ->['training']['LEARNING_RATE_INIT']<-, and it has been set to 0.0002 by default!\n")
+    try:
+        ATOM_TYPES = config['training']['ATOM_TYPES']
+    except:
+        print("\tTotal atom types ->['training']['ATOM_TYPES']<- must be specified by yourself!\n")
+        exit(1)
+    try:
+        CUTOFF_DISTANCE1 = config['get_graph']['CUTOFF_DISTANCE1']
+    except:
+        CUTOFF_DISTANCE1 = 6.5
+        print("\tYou did not set the value of ->['get_graph']['CUTOFF_DISTANCE1']<-, and it has been set to 6.5 by default!\n")
+    try:
+        CUTOFF_DISTANCE2 = config['get_graph']['CUTOFF_DISTANCE2']
+    except:
+        CUTOFF_DISTANCE2 = 5.0
+        print("\tYou did not set the value of ->['get_graph']['CUTOFF_DISTANCE2']<-, and it has been set to 5.0 by default!\n")
+    try:
+        EXPONENT = config['training']['EXPONENT']
+    except:
+        EXPONENT = 6.0
+        print("\tYou did not set the value of ->['training']['EXPONENT']<-, and it has been set to 6.0 by default!\n")
+    try:
+        file_path = config['training']['file_path']
+    except:
+        file_path = "./model_graphdata"
+        print("\tYou did not set the value of ->['training']['file_path']<-, and it has been set to './model_graphdata' by default!\n")
+    try:
+        use_device = config['training']['use_device']
+    except:
+        use_device= 'cuda:0' if torch.cuda.is_available() else 'cpu' 
+        print("\tYou did not set the value of ->['training']['use_device']<-, and it has been set to ",use_device," by default!\n")
+    try:
+        is_pin_memory = config['training']['pin_memory']
+    except:
+        is_pin_memory="False"
+        print("\tYou did not set the value of ->['training']['pin_memory']<-, and it has been set to 'False' by default!\n")
+    try:
+        batch_num = config['training']['batch_num']
+        if(batch_num!=1)
+            print("\tGCNFF only supports the setting of ['training']['batch_num'] to 1 currently\n")
+        batch_num=1
+    except:
+        batch_num=1
+        print("\t->['training']['batch_num']<- has been set to 1 by default!\n")
+    try:
+        LRStep = config['training']['LRStep']
+    except:
+        LRStep =5
+        print("\tYou did not set the value of ->['training']['LRStep']<-, and it has been set to 5 by default!\n")
+    try:
+        LRGamma = config['training']['LRGamma']
+    except:
+        LRGamma =0.8
+        print("\tYou did not set the value of ->['training']['LRGamma']<-, and it has been set to 0.8 by default!\n")
+    try:
+        CNT = config['training']['CNT']
+    except:
+        CNT = 10
+        print("\tYou did not set the value of ->['training']['CNT']<-, and it has been set to 10 by default!\n")
+    try:
+        batch_step = config['training']['batch_step']
+    except:
+        batch_step = 1000
+        print("\tYou did not set the value of ->['training']['batch_step']<-, and it has been set to 1000 by default!\n")
+    try:
+        max_epoch = config['training']['max_epoch']
+    except:
+        max_epoch = 300
+        print("\tYou did not set the value of ->['training']['max_epoch']<-, and it has been set to 300 by default!\n")
+    try:
+        Data_shuffle = config['training']['Data_shuffle']
+    except:
+        Data_shuffle ="False"
+        print("\tYou did not set the value of ->['training']['Data_shuffle']<-, and it has been set to 'False' by default!\n")
+    try:
+        Flag_AutomaticWeightedLoss = config['training']['Flag_AutoLoss']
+    except:
+        Flag_AutomaticWeightedLoss ="False"
+        print("\tYou did not set the value of ->['training']['Flag_AutoLoss']<-, and it has been set to 'False' by default!\n")
+    try:
+        init_model=config['final_model']['begin_model']
+    except:
+        print("\tYou did not set the value of ->['final_model']['begin_model']<- !\n")
+        
+    if Flag_AutomaticWeightedLoss:
+        awl = AutomaticWeightedLoss(3)
+        try:
+            awl_init=torch.load("./AutomaticWeightedLoss.pkl",map_location='cpu')
+            init_awl_state_dict=awl_init.state_dict()
+            awl.load_state_dict(init_awl_state_dict)
+            print("\tReading ->AutomaticWeightedLoss.pkl<- success!\n")
+        except:
+            print("\tCannot reading ->AutomaticWeightedLoss.pkl<- , so we init weight of AutomaticWeightedLoss as ones\n")
+        awl.to(use_device)
+        print("\tUsing the AutomaticWeightedLoss method! ->https://github.com/Mikoto10032/AutomaticWeightedLoss<-\n")
+        
+    model_finetune=GCNFF(cutoff1=CUTOFF_DISTANCE1,cutoff2=CUTOFF_DISTANCE2,gamma=GAMMA,rbfkernel_number=RBF_KERNEL_NUM,
                      hidden_layer_dimensions=HID_DIM,num_conv=NUM_CONV,atom_types=ATOM_TYPES,exponent=EXPONENT)
-    model_init=torch.load(init_model,map_location='cpu')
-    init_state_dict=model_init.state_dict()
-    finetune_state_dict=model_finetune.state_dict()
-    for layer_names in init_state_dict:
-        if layer_names in finetune_state_dict:
-            finetune_state_dict[layer_names]=torch.tensor(init_state_dict[layer_names])
-        else:
-            pos=layer_names.find('.')
-            for i in range(NUM_CONV):
-                temp_str=layer_names[:pos+1]+str(i)+'.'+layer_names[pos+1:]
-                finetune_state_dict[temp_str]=torch.tensor(init_state_dict[layer_names])
-    model_finetune.load_state_dict(finetune_state_dict)
-    
+    try:
+        model_init=torch.load(init_model,map_location='cpu')
+        init_state_dict=model_init.state_dict()
+        finetune_state_dict=model_finetune.state_dict()
+        for layer_names in init_state_dict:
+            if layer_names in finetune_state_dict:
+                finetune_state_dict[layer_names]=torch.tensor(init_state_dict[layer_names])
+            else:
+                pos=layer_names.find('.')
+                for i in range(NUM_CONV):
+                    temp_str=layer_names[:pos+1]+str(i)+'.'+layer_names[pos+1:]
+                    finetune_state_dict[temp_str]=torch.tensor(init_state_dict[layer_names])
+        model_finetune.load_state_dict(finetune_state_dict)
+        print("\tReading ->",init_model,"<- success!\n")
+    except:
+        print("\t!!!we init GCNFF randomly!!!\n")
     model_finetune.to(use_device)
-    optimizer_finetune = torch.optim.Adam(model_finetune.parameters(), lr=LEARNING_RATE_INIT)
+    try:
+        optimizer_finetune = torch.optim.Adam([{'params':model_finetune.parameters()},{'params':awl.parameters(),'weight_decay':0}], lr=LEARNING_RATE_INIT)
+    except:
+        optimizer_finetune = torch.optim.Adam(model_finetune.parameters(), lr=LEARNING_RATE_INIT)
     scheduler_finetune = torch.optim.lr_scheduler.StepLR(optimizer_finetune, step_size=LRStep, gamma=LRGamma)
     
     min_valid_error = np.inf
@@ -370,13 +656,17 @@ def final_train(config_file):
     print("\tthe final model has training data:\t",train_size)
     print("\tthe final model has validation data:\t",valid_size)
     print("\n\n\t\tstarting to training : \n\n")
-    train_dataloader = DataLoader(training_graph, batch_size=batch_num, pin_memory=is_pin_memory)
-    valid_dataloader = DataLoader(validation_graph, batch_size=batch_num, pin_memory=is_pin_memory)
+    train_dataloader = DataLoader(training_graph, batch_size=batch_num, pin_memory=is_pin_memory,shuffle=Data_shuffle)
+    valid_dataloader = DataLoader(validation_graph, batch_size=batch_num, pin_memory=is_pin_memory,shuffle=Data_shuffle)
     
     cnt = 0
     for i in range(max_epoch):
         time_beg_epoch=datetime.datetime.now()
         #training process
+        try:
+            awl.train()
+        except:
+            pass
         model_finetune.train()
         train_error=0
         batch_num=0
@@ -419,7 +709,10 @@ def final_train(config_file):
                     loss_force=torch.mul(loss_force,loss_force)
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,train_graph.y,reduction='none')
                     loss_force_avg=global_mean_pool(loss_force,train_graph.batch)
-                    total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
+                    try:
+                        total_loss=awl(loss_energy,loss_force_avg,loss_virial)
+                    except:
+                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
                     total_loss.backward(torch.ones_like(total_loss))
                     optimizer_finetune.step()
                     train_error+=torch.sum(total_loss).cpu().detach().numpy()
@@ -433,7 +726,10 @@ def final_train(config_file):
                     loss_force=torch.mul(loss_force,loss_force)
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,train_graph.y,reduction='none')
                     loss_force_avg=global_mean_pool(loss_force,train_graph.batch)
-                    total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
+                    try:
+                        total_loss=awl(loss_energy,loss_force_avg)
+                    except:
+                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
                     total_loss.backward(torch.ones_like(total_loss))
                     optimizer_finetune.step()
                     train_error+=torch.sum(total_loss).cpu().detach().numpy()
@@ -447,6 +743,10 @@ def final_train(config_file):
         train_errors_finetune.append(train_error/train_size)
     
         #validation process
+        try:
+            awl.eval()
+        except:
+            pass
         model_finetune.eval()
         optimizer_finetune.zero_grad()
         torch.cuda.empty_cache()
@@ -488,14 +788,20 @@ def final_train(config_file):
                     loss_force=torch.mul(loss_force,loss_force)
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,valid_graph.y,reduction='none')
                     loss_force_avg=global_mean_pool(loss_force,valid_graph.batch)
-                    total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
+                    try:
+                        total_loss=awl(loss_energy,loss_force_avg,loss_virial)
+                    except:
+                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
                     valid_error+=torch.sum(total_loss).cpu().detach().numpy()
                 except:
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,valid_graph.y,reduction='none')
                     loss_force=torch.norm(valid_graph.force-pred_force,p=2,dim=1,keepdim=True)
                     loss_force=torch.mul(loss_force,loss_force)
                     loss_force_avg=global_mean_pool(loss_force,valid_graph.batch)
-                    total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
+                    try:
+                        total_loss=awl(loss_energy,loss_force_avg)
+                    except:
+                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
                     valid_error+=torch.sum(total_loss).cpu().detach().numpy()
             except:
                 torch.cuda.empty_cache()
@@ -517,12 +823,20 @@ def final_train(config_file):
 
         if valid_error<min_valid_error: #judgement for early stopping
             cnt=0
+            try:
+                torch.save(awl,'AutomaticWeightedLoss_finetune.pkl')
+            except:
+                pass
             torch.save(model_finetune,'best_model_finetune.pkl')
             min_valid_error=valid_error
         else:
             cnt+=1
             if cnt>=CNT:
                 print('Early stopping')
+                try:
+                    del(awl)
+                except:
+                    pass
                 del(model_finetune)
                 #with open('training_errors_finetune.pickle','wb') as f:
                 #    pickle.dump(train_errors_finetune,f)
@@ -533,15 +847,36 @@ def final_train(config_file):
     
 def model_test(config_file):
     config = load_file(config_file)
-    testdata = config['model_test']['testdata']
-    use_device = config['model_test']['use_device']
-    testmodel= config['model_test']['testmodel']
-    is_pin_memory = config['training']['pin_memory']
-    batch_num = config['training']['batch_num']
-    
     print("\n\t------------------Step--Five---------------------\n")
-    print("\tUsing the 'specified test set' to test the 'specified model'.\n")
-    
+    try:
+        use_device = config['model_test']['use_device']
+    except:
+        use_device= 'cuda:0' if torch.cuda.is_available() else 'cpu' 
+        print("\tYou did not set the value of ->['model_test']['use_device']<-, and it has been set to ",use_device," by default!\n")
+    try:
+        is_pin_memory = config['training']['pin_memory']
+    except:
+        is_pin_memory="False"
+        print("\tYou did not set the value of ->['training']['pin_memory']<-, and it has been set to 'False' by default!\n")
+    try:
+        batch_num = config['training']['batch_num']
+        if(batch_num!=1)
+            print("\tGCNFF only supports the setting of ['training']['batch_num'] to 1 currently\n")
+        batch_num=1
+    except:
+        batch_num=1
+        print("\t->['training']['batch_num']<- has been set to 1 by default!\n")
+    try:
+        testdata = config['model_test']['testdata']
+    except:
+        print("\tThe test dataset ->['model_test']['testdata']<- must be specified by yourself!\n")
+        exit(1)
+    try:
+        testmodel= config['model_test']['testmodel']
+    except:
+        print("\tThe test model ->['model_test']['testmodel']<- must be specified by yourself!\n")
+        exit(1)
+    print("\tUsing the -> ",testdata," <- to test the -> ",testmodel," <- .\n")
     test_graph = pickle.load(open(testdata, 'rb'))
     test_size = len(test_graph)
     print("\tthe test data has :\t",test_size)
@@ -627,19 +962,58 @@ def model_test(config_file):
 
 def get_potential(config_file):
     config = load_file(config_file)
-    
-    GAMMA = config['training']['GAMMA']
-    RBF_KERNEL_NUM = config['training']['RBF_KERNEL_NUM']
-    HID_DIM = config['training']['HID_DIM']
-    NUM_CONV = config['training']['NUM_CONV']
-    ATOM_TYPES = config['training']['ATOM_TYPES']
-    CUTOFF_DISTANCE1 = config['get_graph']['CUTOFF_DISTANCE1']
-    CUTOFF_DISTANCE2 = config['get_graph']['CUTOFF_DISTANCE2']
-    EXPONENT = config['training']['EXPONENT']
-    Out_model= config['get_potential']['out_model']
-    element_list= config['get_potential']['element_list']
     print("\n\t------------------Step--Six---------------------\n")
-    print("\tGenerating the 'specified model' parameters for LAMMPS.\n")
+    try:
+        Out_model= config['get_potential']['out_model']
+    except:
+        print("\tTotal atom types ->['get_potential']['out_model']<- must be specified by yourself!\n")
+        exit(1)
+    try:
+        element_list= config['get_potential']['element_list']
+    except:
+        print("\tTotal atom types ->['get_potential']['element_list']<- must be specified by yourself!\n")
+        exit(1)
+    try:
+        GAMMA = config['training']['GAMMA']
+    except:
+        GAMMA = 0.1
+        print("\tYou did not set the value of ->['training']['GAMMA']<-, and it has been set to 0.1 by default!\n")
+    try:
+        RBF_KERNEL_NUM = config['training']['RBF_KERNEL_NUM']
+    except:
+        RBF_KERNEL_NUM = 128
+        print("\tYou did not set the value of ->['training']['RBF_KERNEL_NUM']<-, and it has been set to 128 by default!\n")
+    try:
+        HID_DIM = config['training']['HID_DIM']
+    except:
+        HID_DIM = 32
+        print("\tYou did not set the value of ->['training']['HID_DIM']<-, and it has been set to 32 by default!\n")
+    try:
+        NUM_CONV = config['training']['NUM_CONV']
+    except:
+        NUM_CONV = 3
+        print("\tYou did not set the value of ->['training']['NUM_CONV']<-, and it has been set to 3 by default!\n")
+    try:
+        ATOM_TYPES = config['training']['ATOM_TYPES']
+    except:
+        print("\tTotal atom types ->['training']['ATOM_TYPES']<- must be specified by yourself!\n")
+        exit(1)
+    try:
+        CUTOFF_DISTANCE1 = config['get_graph']['CUTOFF_DISTANCE1']
+    except:
+        CUTOFF_DISTANCE1 = 6.5
+        print("\tYou did not set the value of ->['get_graph']['CUTOFF_DISTANCE1']<-, and it has been set to 6.5 by default!\n")
+    try:
+        CUTOFF_DISTANCE2 = config['get_graph']['CUTOFF_DISTANCE2']
+    except:
+        CUTOFF_DISTANCE2 = 5.0
+        print("\tYou did not set the value of ->['get_graph']['CUTOFF_DISTANCE2']<-, and it has been set to 5.0 by default!\n")
+    try:
+        EXPONENT = config['training']['EXPONENT']
+    except:
+        EXPONENT = 6.0
+        print("\tYou did not set the value of ->['training']['EXPONENT']<-, and it has been set to 6.0 by default!\n")
+    print("\tGenerating the -> ",Out_model," <- parameters for LAMMPS into -> potential.txt <- .\n")
     out_model = torch.load(Out_model, map_location='cpu')
     filename = 'potential.txt'
     with open(filename, 'w') as f:

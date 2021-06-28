@@ -91,10 +91,10 @@ class InteractionBlock(nn.Module):
         return node_feature,node_feature_ghost
 
 
-class Schnet_init(nn.Module):
+class GCNFF_init(nn.Module):
     def __init__(self,cutoff1=6,cutoff2=3,gamma=0.5,rbfkernel_number=300,
                  hidden_layer_dimensions=64,num_conv=3,atom_types=1,exponent=5):
-        super(Schnet_init,self).__init__()
+        super(GCNFF_init,self).__init__()
         self.num_conv=num_conv
         self.cutoff1=cutoff1
         self.cutoff2=cutoff2
@@ -120,10 +120,10 @@ class Schnet_init(nn.Module):
         return temp
 
 
-class Schnet(nn.Module):
+class GCNFF(nn.Module):
     def __init__(self,cutoff1=6,cutoff2=3,gamma=0.5,rbfkernel_number=300,
                  hidden_layer_dimensions=64,num_conv=3,atom_types=1,exponent=5):
-        super(Schnet,self).__init__()
+        super(GCNFF,self).__init__()
         self.num_conv=num_conv
         self.cutoff1=cutoff1
         self.cutoff2=cutoff2
