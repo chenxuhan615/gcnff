@@ -1064,6 +1064,8 @@ def direct_train(config_file):
             random.seed(randomSeed)
             random.shuffle(graph_list)
             N_training = int(traindate_for_finalmodel * len(graph_list))
+            train_size = len(graph_list[:N_training])
+            valid_size = len(graph_list[N_training:])
             print("\tRead the ->",file,"<- success! Total configuration:",len(graph_list))
             if(is_pin_memory=="True"):
                 train_dataloader = DataLoader(graph_list[:N_training], batch_size=batch_num, pin_memory=True)
