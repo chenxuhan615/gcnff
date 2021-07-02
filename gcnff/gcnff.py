@@ -281,8 +281,20 @@ def init_train(config_file):
     print("\tthe init model has training data:\t",init_train_size)
     print("\tthe init model has validation data:\t",init_valid_size)
     print("\n\n\t\tstarting to training : \n\n")
-    init_train_dataloader = DataLoader(init_training_graph, batch_size=batch_num, pin_memory=is_pin_memory,shuffle=Data_shuffle)
-    init_valid_dataloader = DataLoader(init_validation_graph, batch_size=batch_num, pin_memory=is_pin_memory,shuffle=Data_shuffle)
+    if(is_pin_memory=="True"):
+        if(Data_shuffle=="True"):
+            init_train_dataloader = DataLoader(init_training_graph, batch_size=batch_num, pin_memory=True,shuffle=True)
+            init_valid_dataloader = DataLoader(init_validation_graph, batch_size=batch_num, pin_memory=True,shuffle=True)
+        else:
+            init_train_dataloader = DataLoader(init_training_graph, batch_size=batch_num, pin_memory=True,shuffle=False)
+            init_valid_dataloader = DataLoader(init_validation_graph, batch_size=batch_num, pin_memory=True,shuffle=False)
+    else:
+        if(Data_shuffle=="True"):
+            init_train_dataloader = DataLoader(init_training_graph, batch_size=batch_num, pin_memory=False,shuffle=True)
+            init_valid_dataloader = DataLoader(init_validation_graph, batch_size=batch_num, pin_memory=False,shuffle=True)
+        else:
+            init_train_dataloader = DataLoader(init_training_graph, batch_size=batch_num, pin_memory=False,shuffle=False)
+            init_valid_dataloader = DataLoader(init_validation_graph, batch_size=batch_num, pin_memory=False,shuffle=False)
     model_init=GCNFF_init(cutoff1=CUTOFF_DISTANCE1,cutoff2=CUTOFF_DISTANCE2,gamma=GAMMA,rbfkernel_number=RBF_KERNEL_NUM,
                             hidden_layer_dimensions=HID_DIM,num_conv=NUM_CONV,atom_types=ATOM_TYPES,exponent=EXPONENT)
 
@@ -656,9 +668,20 @@ def final_train(config_file):
     print("\tthe final model has training data:\t",train_size)
     print("\tthe final model has validation data:\t",valid_size)
     print("\n\n\t\tstarting to training : \n\n")
-    train_dataloader = DataLoader(training_graph, batch_size=batch_num, pin_memory=is_pin_memory,shuffle=Data_shuffle)
-    valid_dataloader = DataLoader(validation_graph, batch_size=batch_num, pin_memory=is_pin_memory,shuffle=Data_shuffle)
-    
+    if(is_pin_memory=="True"):
+        if(Data_shuffle=="True"):
+            train_dataloader = DataLoader(training_graph, batch_size=batch_num, pin_memory=True,shuffle=True)
+            valid_dataloader = DataLoader(validation_graph, batch_size=batch_num, pin_memory=True,shuffle=True)
+        else:
+            train_dataloader = DataLoader(training_graph, batch_size=batch_num, pin_memory=True,shuffle=False)
+            valid_dataloader = DataLoader(validation_graph, batch_size=batch_num, pin_memory=True,shuffle=False)
+    else:
+        if(Data_shuffle=="True"):
+            train_dataloader = DataLoader(training_graph, batch_size=batch_num, pin_memory=False,shuffle=True)
+            valid_dataloader = DataLoader(validation_graph, batch_size=batch_num, pin_memory=False,shuffle=True)
+        else:
+            train_dataloader = DataLoader(training_graph, batch_size=batch_num, pin_memory=False,shuffle=False)
+            valid_dataloader = DataLoader(validation_graph, batch_size=batch_num, pin_memory=False,shuffle=False)
     cnt = 0
     for i in range(max_epoch):
         time_beg_epoch=datetime.datetime.now()
