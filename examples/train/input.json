@@ -43,7 +43,14 @@
   "final_model": {
     "begin_model": "./best_model_init.pkl"
   },
-
+  
+  "direct_train": {
+    "RandomSeed": 0,
+	"graphfile_path": "./graphdata",
+	"traindata": 0.7,
+	"begin_model": "./best_model_init.pkl"
+  },
+  
   "model_test": {
     "use_device": "cuda:0",
     "testdata": "./model_graphdata/test_graphs.pickle",

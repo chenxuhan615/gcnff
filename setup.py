@@ -21,7 +21,7 @@ def _process_requirements():
     return_code = os.system('pip3 install torch-sparse -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html')
     assert return_code == 0, 'error, status_code is: {}, exit!'.format(return_code)
     # install torch-cluster
-    return_code = os.system('pip3 install torch-sparse -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html')
+    return_code = os.system('pip3 install torch-cluster -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html')
     assert return_code == 0, 'error, status_code is: {}, exit!'.format(return_code)
     # install torch-spline-conv
     return_code = os.system('pip3 install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html')
