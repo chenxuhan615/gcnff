@@ -1058,7 +1058,7 @@ def direct_train(config_file):
             pass
         model_finetune.train()
         train_error=0
-        batch_num=0
+        num_batch=0
         for file in file_names:
             graph_list=pickle.load(open(file_path+'/'+file,'rb'))
             random.seed(randomSeed)
@@ -1073,7 +1073,7 @@ def direct_train(config_file):
                 valid_dataloader = DataLoader(graph_list[N_training:], batch_size=batch_num, pin_memory=False)
 
             for train_graph in train_dataloader:
-                batch_num+=1
+                num_batch+=1
                 train_graph=train_graph.to(use_device)
                 optimizer_finetune.zero_grad()
                 dist1=torch.index_select(train_graph.pos,0,train_graph.edge_index1[1])-torch.index_select(train_graph.pos,0,train_graph.edge_index1[0])
@@ -1118,8 +1118,8 @@ def direct_train(config_file):
                         total_loss.backward(torch.ones_like(total_loss))
                         optimizer_finetune.step()
                         train_error+=torch.sum(total_loss).cpu().detach().numpy()
-                        if batch_num%batch_step==0:
-                            print('   batch ',batch_num,' training error = %.2f'%(total_loss.item()),
+                        if num_batch%batch_step==0:
+                            print('   batch ',num_batch,' training error = %.2f'%(total_loss.item()),
                                                         ' loss of energy = %.2f'%(loss_energy.item()),
                                                         ' loss of force = %.2f'%(loss_force_avg.item()),
                                                         'loss of virial = %.2f'%(loss_virial.item()))
@@ -1135,8 +1135,8 @@ def direct_train(config_file):
                         total_loss.backward(torch.ones_like(total_loss))
                         optimizer_finetune.step()
                         train_error+=torch.sum(total_loss).cpu().detach().numpy()
-                        if batch_num%batch_step==0:
-                            print('   batch ',batch_num,' training error = ',total_loss.item(),
+                        if num_batch%batch_step==0:
+                            print('   batch ',num_batch,' training error = ',total_loss.item(),
                                                         ' loss of energy = ',loss_energy.item(),
                                                         ' loss of force = ',loss_force_avg.item())
                 except:
