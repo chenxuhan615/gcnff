@@ -1,0 +1,27 @@
+{
+  "get_graph": {
+    "file_path": "./test"
+  },
+
+  "training": {
+	"ATOM_TYPES": 2
+  },
+
+  "final_model": {
+    "begin_model": "./best_model_init.pkl"
+  },
+  
+  "direct_free_train": {
+	"begin_model": "./best_model_init.pkl"
+  },
+
+  "model_test": {
+    "testdata": "./model_graphdata/test_graphs.pickle",
+	"testmodel": "./best_model_finetune.pkl"
+  },
+  
+   "get_potential": {
+    "out_model": "./best_model_finetune.pkl",
+	"element_list": "Hf O"
+  }
+}

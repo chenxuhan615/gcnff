@@ -21,7 +21,7 @@
     "RBF_KERNEL_NUM": 128,
     "HID_DIM": 32,
     "NUM_CONV": 4,
-	"ATOM_TYPES": 1,
+	"ATOM_TYPES": 2,
 	"EXPONENT": 6,
 	
 	"RHO1": 0.02,
@@ -36,7 +36,7 @@
 	"batch_step": 1000,
 	"max_epoch": 10000,
     "use_device": "cuda:0",
-	"Data_shuffle" : "False"
+	"Data_shuffle" : "False",
 	"Flag_AutoLoss" : "True"
   },
 
@@ -44,13 +44,20 @@
     "begin_model": "./best_model_init.pkl"
   },
   
-  "direct_train": {
+  "direct_fix_train": {
+    "RandomSeed": 0,
+	"graphfile_path": "./graphdata",
+	"initmodel_data": 0.25,
+    "initmodel_traindata": 0.75
+  },
+  
+  "direct_free_train": {
     "RandomSeed": 0,
 	"graphfile_path": "./graphdata",
 	"traindata": 0.7,
 	"begin_model": "./best_model_init.pkl"
   },
-  
+
   "model_test": {
     "use_device": "cuda:0",
     "testdata": "./model_graphdata/test_graphs.pickle",
@@ -59,6 +66,6 @@
   
    "get_potential": {
     "out_model": "./best_model_finetune.pkl",
-	"element_list": "S"
+	"element_list": "Hf O"
   }
 }

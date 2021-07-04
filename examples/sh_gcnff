@@ -1,10 +1,18 @@
 #!/bin/bash
 
 gcnff get_graph input.json
+
+##################################
 gcnff divide_set input.json
-gcnff init_train input.json
-gcnff final_train input.json
+gcnff divide_fix_train input.json
+gcnff divide_free_train input.json
+##################################
+#gcnff direct_fix_train input.json
+#gcnff direct_free_train input.json
+##################################
+
 gcnff model_test input.json
+
 gcnff get_potential input.json
 
 gcnff showfig Epoches-Errors-init.txt

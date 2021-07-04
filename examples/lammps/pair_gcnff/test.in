@@ -1,0 +1,6 @@
+##############
+
+pair_style     gcnff
+pair_coeff      * * potential.txt Hf O
+
+##############
