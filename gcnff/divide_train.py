@@ -1,4 +1,5 @@
 import json
+import math
 import torch
 import pickle
 import datetime
@@ -222,7 +223,10 @@ def divide_fix_train(config_file):
                     try:
                         total_loss=awl(loss_energy,loss_force_avg,loss_virial)
                     except:
-                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
+                        try:
+                            total_loss=eval(RHO1)*loss_energy+(1-eval(RHO1))*loss_force_avg+eval(RHO2)*loss_virial
+                        except:
+                            total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
                     total_loss.backward(torch.ones_like(total_loss))
                     optimizer_init.step()
                     train_error+=torch.sum(total_loss).cpu().detach().numpy()
@@ -239,7 +243,11 @@ def divide_fix_train(config_file):
                     try:
                         total_loss=awl(loss_energy,loss_force_avg)
                     except:
-                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
+                        try:
+                            total_loss=eval(RHO1)*loss_energy+(1-eval(RHO1))*loss_force_avg
+                        except:
+                            total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
+                            
                     total_loss.backward(torch.ones_like(total_loss))
                     optimizer_init.step()
                     train_error+=torch.sum(total_loss).cpu().detach().numpy()
@@ -301,7 +309,10 @@ def divide_fix_train(config_file):
                     try:
                         total_loss=awl(loss_energy,loss_force_avg,loss_virial)
                     except:
-                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
+                        try:
+                            total_loss=eval(RHO1)*loss_energy+(1-eval(RHO1))*loss_force_avg+eval(RHO2)*loss_virial
+                        except:
+                            total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
                     valid_error+=torch.sum(total_loss).cpu().detach().numpy()
                 except:
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,valid_graph.y,reduction='none')
@@ -311,7 +322,10 @@ def divide_fix_train(config_file):
                     try:
                         total_loss=awl(loss_energy,loss_force_avg)
                     except:
-                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
+                        try:
+                            total_loss=eval(RHO1)*loss_energy+(1-eval(RHO1))*loss_force_avg
+                        except:
+                            total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
                     valid_error+=torch.sum(total_loss).cpu().detach().numpy()
             except:
                 torch.cuda.empty_cache()
@@ -595,7 +609,10 @@ def divide_free_train(config_file):
                     try:
                         total_loss=awl(loss_energy,loss_force_avg,loss_virial)
                     except:
-                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
+                        try:
+                            total_loss=eval(RHO1)*loss_energy+(1-eval(RHO1))*loss_force_avg+eval(RHO2)*loss_virial
+                        except:
+                            total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
                     total_loss.backward(torch.ones_like(total_loss))
                     optimizer_finetune.step()
                     train_error+=torch.sum(total_loss).cpu().detach().numpy()
@@ -612,7 +629,10 @@ def divide_free_train(config_file):
                     try:
                         total_loss=awl(loss_energy,loss_force_avg)
                     except:
-                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
+                        try:
+                            total_loss=eval(RHO1)*loss_energy+(1-eval(RHO1))*loss_force_avg
+                        except:
+                            total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
                     total_loss.backward(torch.ones_like(total_loss))
                     optimizer_finetune.step()
                     train_error+=torch.sum(total_loss).cpu().detach().numpy()
@@ -674,7 +694,10 @@ def divide_free_train(config_file):
                     try:
                         total_loss=awl(loss_energy,loss_force_avg,loss_virial)
                     except:
-                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
+                        try:
+                            total_loss=eval(RHO1)*loss_energy+(1-eval(RHO1))*loss_force_avg+eval(RHO2)*loss_virial
+                        except:
+                            total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg+RHO2*loss_virial
                     valid_error+=torch.sum(total_loss).cpu().detach().numpy()
                 except:
                     loss_energy=torch.nn.functional.mse_loss(pred_energy,valid_graph.y,reduction='none')
@@ -684,7 +707,10 @@ def divide_free_train(config_file):
                     try:
                         total_loss=awl(loss_energy,loss_force_avg)
                     except:
-                        total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
+                        try:
+                            total_loss=eval(RHO1)*loss_energy+(1-eval(RHO1))*loss_force_avg
+                        except:
+                            total_loss=RHO1*loss_energy+(1-RHO1)*loss_force_avg
                     valid_error+=torch.sum(total_loss).cpu().detach().numpy()
             except:
                 torch.cuda.empty_cache()
