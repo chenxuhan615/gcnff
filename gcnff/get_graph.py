@@ -52,10 +52,10 @@ def get_graph(config_file):
         time_beg_epoch=datetime.datetime.now()
         try:
             graph_list=list()
-            generate_graphs1(file_path+'/'+file,graph_list,CUTOFF_DISTANCE1,CUTOFF_DISTANCE2,jumpNum,baseEvalue)
+            generate_graphs2(file_path+'/'+file,graph_list,CUTOFF_DISTANCE1,CUTOFF_DISTANCE2,jumpNum,baseEvalue)
         except:
             graph_list=list()
-            generate_graphs2(file_path+'/'+file,graph_list,CUTOFF_DISTANCE1,CUTOFF_DISTANCE2,jumpNum,baseEvalue)
+            generate_graphs1(file_path+'/'+file,graph_list,CUTOFF_DISTANCE1,CUTOFF_DISTANCE2,jumpNum,baseEvalue)
         with open(graph_path+'/'+file+'.pickle','wb') as f:
             pickle.dump(graph_list,f)
         time_end_epoch=datetime.datetime.now()
