@@ -180,10 +180,7 @@ def direct_fix_train(config_file):
         num_batch=0
         for file in file_names:
             graph_list=pickle.load(open(file_path+'/'+file,'rb'))
-            if(Data_shuffle=="True"):
-                random.seed(randomSeed+i)
-            else:
-                random.seed(randomSeed)
+            random.seed(randomSeed)
             random.shuffle(graph_list)
             N_init_data = int(date_for_initmodel * len(graph_list))
             N_init_training = int(traindate_for_initmodel * N_init_data)
@@ -576,10 +573,7 @@ def direct_free_train(config_file):
         num_batch=0
         for file in file_names:
             graph_list=pickle.load(open(file_path+'/'+file,'rb'))
-            if(Data_shuffle=="True"):
-                random.seed(randomSeed+i)
-            else:
-                random.seed(randomSeed)
+            random.seed(randomSeed)
             random.shuffle(graph_list)
             N_training = int(traindate_for_finalmodel * len(graph_list))
             train_size = len(graph_list[:N_training])
