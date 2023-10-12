@@ -31,8 +31,7 @@ return_code = os.system('pip3 install torch-geometric')
 > `python setup.py install`
 > Wait patiently for the installation process ... 
 > Enter `gcnff` and you will see the help information, which represents your successful installation.
-> You can see that:
-> ![image](https://github.com/chenxuhan615/gcnff/blob/7b7d42636d588655ee2e9941e3e8feaf268d4ec6/examples/20231012144606.png)
+> You can see that: [image](https://github.com/chenxuhan615/gcnff/blob/7b7d42636d588655ee2e9941e3e8feaf268d4ec6/examples/20231012144606.png)
 > - The first column is a brief description of the GCNFF;
 > - The second column shows the style of GCNFF commands;
 > - The third column shows 8 optional [action commond]s mentioned in second column;
