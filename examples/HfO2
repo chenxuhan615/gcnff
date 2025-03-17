@@ -1,1 +1,4 @@
 
+best_model_finetune.pkl is an example after training for HfO2 
+
+raw data, from DPMD in DPlibrary, you can see it in input_dataset*.bar.bz in this file!
